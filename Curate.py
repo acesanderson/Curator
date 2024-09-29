@@ -139,7 +139,7 @@ def write_date_manifest(last_updated: str) -> None:
 	"""
 	with open(date_manifest, 'w') as f:
 		f.write(last_updated)
-	print("Date manifest updated.")
+	console.print(f"[green]{checkbox} Date manifest created: {date_manifest}[/green]")
 
 def print_readme() -> None:
 	"""
@@ -372,8 +372,7 @@ if __name__ == "__main__":
 			console.print(f"[green]{checkbox} Reranker installed.[/green]")
 			collection = create_vector_db()
 			console.print(f"[green]{checkbox} Vector database created: {vector_db}[/green]")
-			console.print("\n")
-			console.print("[italic]First-time user? Type `curate -r` to see the readme.[/italic]")
+			console.print("[italic yellow]First-time user? Type `curate -r` to see the readme.[/italic yellow]")
 	# Our arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('query', nargs='?', help='A query for the text.')
