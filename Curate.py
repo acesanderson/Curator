@@ -10,13 +10,14 @@ from datetime import datetime	# for reporting the day/time of the last update
 from FlagEmbedding import FlagReranker	# for reranking
 
 # Definitions
+# -----------------------------------------------------------------
 
 cosmo_file = "courselist_en_US.xlsx"
 date_manifest = ".date_manifest"
 vector_db = ".chroma_database"
 
 # Functions
-
+# -----------------------------------------------------------------
 ## Application status checks -- booleans + data/time strings.
 
 def installed(verbose = False) -> bool:
@@ -77,6 +78,7 @@ def update_required() -> bool:
 		return False
 
 ## Handling the Cosmo Export
+# -----------------------------------------------------------------
 
 def clean_text(text):
 	"""
@@ -119,6 +121,7 @@ def write_date_manifest(last_updated: str) -> None:
 	print("Date manifest updated.")
 
 ## Handling the Vector Database
+# -----------------------------------------------------------------
 
 def get_vector_db_collection() -> chromadb.Collection:
 	"""
@@ -217,6 +220,7 @@ def update_vector_db() -> chromadb.Collection:
 	return collection
 
 ## Our query functions
+# -----------------------------------------------------------------
 
 def query_vector_db(collection: chromadb.Collection, query_string: str, n_results: int) -> list[str]:
 	"""
