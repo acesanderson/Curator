@@ -1,4 +1,4 @@
-# Hello message
+# Imports can take a while, so we'll give the user a spinner.
 # -----------------------------------------------------------------
 from rich.console import Console
 from rich.panel import Panel
@@ -8,21 +8,8 @@ import time
 
 console = Console() # for spinner
 
-text = Text("     Welcome to Curator: context-driven course recommendations      ", style="bold white")
-welcome_card = Panel(
-	text,
-	title=None,
-	expand=False,
-	border_style="bold",
-	padding=(1, 1),
-	width=90
-)
-console.print(welcome_card)
-
 # our imports
 # -----------------------------------------------------------------
-
-
 
 with console.status("[bold green]Loading...", spinner="dots"):
 	# time.sleep(1)
@@ -45,6 +32,7 @@ with console.status("[bold green]Loading...", spinner="dots"):
 cosmo_file = "courselist_en_US.xlsx" # script needs three files to function; cosmo export, vector database, and date manifest
 date_manifest = ".date_manifest"
 vector_db = ".chroma_database"
+checkbox = "[✓]"
 
 # Functions
 # -----------------------------------------------------------------
@@ -171,6 +159,9 @@ def update_progress(current, total) -> None:
 	This takes the index and len(iter) of a for loop and creates a pretty
 	progress bar.
 	"""
+	GREEN = '\033[92m'
+	YELLOW = '\033[93m'
+	RESET = '\033[0m'
 	if current != total:
 		percent = float(current) * 100 / total
 		bar = GREEN + "=" * int(percent) + RESET + YELLOW + '-' * (100 - int(percent)) + RESET
@@ -210,7 +201,7 @@ def create_vector_db() -> chromadb.Collection:
 	"""
 	Create the vector databases.
 	"""
-	print("Loading Cosmo export and generating embeddings. This may take a while.")
+	console.print("[green]Generating embeddings for the course descriptions. This may take a while.[/green]")
 	# Delete existing database
 	if os.path.exists(vector_db):
 		shutil.rmtree(vector_db)
@@ -222,10 +213,10 @@ def create_vector_db() -> chromadb.Collection:
 	data = load_cosmo_export()
 	# Add the data to the collection
 	load_to_chroma(collection, data)
-	validate_chroma_database(collection)
 	# Write the date manifest
 	print("Writing date manifest.")
 	write_date_manifest(str(check_cosmo_export_last_modified()))
+	validate_chroma_database(collection)
 	return collection
 
 def update_vector_db() -> chromadb.Collection:
@@ -250,6 +241,13 @@ def update_vector_db() -> chromadb.Collection:
 	print("Writing date manifest.")
 	write_date_manifest(str(check_cosmo_export_last_modified()))
 	return collection
+
+def load_reranker() -> None:
+	"""
+	Load the reranker; this can take a while when first initializing.
+	"""
+	with console.status(f'[bold green]Installing reranking model... This may take a while. [/bold green]', spinner="dots"):
+		reranker = FlagReranker('BAAI/bge-reranker-large', use_fp16=True) # Setting use_fp16 to True speeds up computation with a slight performance degradation
 
 ## Our query functions
 # -----------------------------------------------------------------
@@ -287,7 +285,7 @@ def query_courses(collection: chromadb.Collection, query_string: str, k: int, n_
 	Query the collection for a query string and return the top n results.
 	"""
 	console.print("[yellow]----------------------------------------------[/yellow]")
-	with console.status(f'[bold green]Query: [/bold green][yellow]"{query_string}"...[/yellow]', spinner="dots"):
+	with console.status(f'[bold green]Query: [/bold green][yellow]"{query_string}"[/yellow][green]...[/green]', spinner="dots"):
 		time.sleep(1)
 		results = query_vector_db(collection, query_string, n_results)
 		reranked_results = rerank_options(results, query_string, k)
@@ -329,7 +327,7 @@ def batch_queries(queries: list[str], k, n) -> list[list[str]]:
 		results = query_courses(collection, query, k = k, n_results = n)
 		batch_results.append(results)
 		# console.print("[yellow]----------------------------------------------[/yellow]")
-		console.print(f"[green]Query {index + 1} of {len(queries)}: {query}[/green]")
+		console.print(f"[green]Query {index + 1} of {len(queries)}:[/green] [yellow]{query}[/yellow]")
 		console.print("[yellow]----------------------------------------------[/yellow]")
 		for result in results:
 			console.print(result)
@@ -344,12 +342,27 @@ if __name__ == "__main__":
 		else:
 			collection = get_vector_db_collection()
 	else:
-		print("Initializing Curator...")
 		if not cosmo_export_exists():
-			print("Cosmo export not found. Please download the latest export from Cosmo and try again.")
+			console.print("[red]Cosmo export not found. Please download the latest export from Cosmo and try again.[/red]")
 			sys.exit()
 		else:
+			# First time! Installation.
+			text = Text("     Welcome to Curator: context-driven course recommendations      ", style="bold white")
+			welcome_card = Panel(
+				text,
+				title=None,
+				expand=False,
+				border_style="bold",
+				padding=(1, 1),
+				width=90
+			)
+			console.print(welcome_card)
+			console.print("[bold green]First time installation:[/bold green]")
+			console.print(f"[green]{checkbox} Cosmo export found: {cosmo_file}[/green]")
+			load_reranker()			
+			console.print(f"[green]{checkbox} Reranker installed.[/green]")
 			collection = create_vector_db()
+			console.print(f"[green]{checkbox} Vector database created: {vector_db}[/green]")
 	# Our arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('query', nargs='?', help='A query for the text.')
@@ -358,6 +371,7 @@ if __name__ == "__main__":
 	parser.add_argument('-s', '--status', action="store_true", help="Print the status of the application")
 	parser.add_argument('-i', '--input_file', type=str, help='Input filename (either csv or txt or excel; data needs to be in a single column)')
 	parser.add_argument('-o', '--output_file', type=str, help='Output filename')
+	# parser.add_argument('-w', '--wipe', type=str, help='Delete data files to start fresh.')
 	args = parser.parse_args()
 	status = args.status
 	query = args.query
@@ -382,16 +396,16 @@ if __name__ == "__main__":
 					f.write(str(result) + '\n')
 			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
 		sys.exit()
-	if '\n' in query:
-		queries = process_multiline_input(query)
-		results = batch_queries(queries, k, n)
-		if args.output_file:
-			with open(args.output_file, 'w') as f:
-				for result in results:
-					f.write(str(result) + '\n')
-			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
-		sys.exit()
 	elif query:
+		if '\n' in query:
+			queries = process_multiline_input(query)
+			results = batch_queries(queries, k, n)
+			if args.output_file:
+				with open(args.output_file, 'w') as f:
+					for result in results:
+						f.write(str(result) + '\n')
+				console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
+			sys.exit()
 		results = query_courses(collection, query, k = k, n_results = n)
 		console.print(f"[green]Query: {query}[/green]")
 		console.print("[yellow]----------------------------------------------[/yellow]")
