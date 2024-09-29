@@ -24,9 +24,6 @@ with console.status("[bold green]Loading...", spinner="dots"):
 	from FlagEmbedding import FlagReranker	# for reranking
 	import time
 
-# Clear the terminal
-os.system('clear')
-
 # Definitions
 # -----------------------------------------------------------------
 
@@ -356,7 +353,9 @@ if __name__ == "__main__":
 			console.print("[red]Cosmo export not found. Please download the latest export from Cosmo and try again.[/red]")
 			sys.exit()
 		else:
-			# First time! Installation.
+			# First time! Installation with a little bit of fanfare.
+			# Clear the terminal
+			os.system('clear')
 			text = Text("     Welcome to Curator: context-driven course recommendations      ", style="bold white")
 			welcome_card = Panel(
 				text,
@@ -373,6 +372,8 @@ if __name__ == "__main__":
 			console.print(f"[green]{checkbox} Reranker installed.[/green]")
 			collection = create_vector_db()
 			console.print(f"[green]{checkbox} Vector database created: {vector_db}[/green]")
+			console.print("\n")
+			console.print("[italic]First-time user? Type `curate -r` to see the readme.[/italic]")
 	# Our arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('query', nargs='?', help='A query for the text.')
