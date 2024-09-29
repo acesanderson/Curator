@@ -1,6 +1,0 @@
-decided on a pricing strategy for a SaaS product
-firing difficult employees
-developing a change management program for digital transformation
-evaluating real estate decisions
-building websites with asp.net
-terraform, docker, and kubernetes
