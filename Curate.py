@@ -6,7 +6,7 @@ from rich.text import Text
 from rich.spinner import Spinner	# for spinner
 import time
 
-console = Console() # for spinner
+console = Console(width=80) # for spinner
 
 # our imports
 # -----------------------------------------------------------------
@@ -142,6 +142,15 @@ def write_date_manifest(last_updated: str) -> None:
 	with open(date_manifest, 'w') as f:
 		f.write(last_updated)
 	print("Date manifest updated.")
+
+def print_readme() -> None:
+	"""
+	Simple function to print the readme as a help file.
+	"""
+	from rich.markdown import Markdown
+	with open('readme.md', 'r') as f:
+		markdown_text = f.read()
+	console.print(Markdown(markdown_text))
 
 ## Handling the Vector Database
 # -----------------------------------------------------------------
@@ -371,10 +380,14 @@ if __name__ == "__main__":
 	parser.add_argument('-s', '--status', action="store_true", help="Print the status of the application")
 	parser.add_argument('-i', '--input_file', type=str, help='Input filename (either csv or txt or excel; data needs to be in a single column)')
 	parser.add_argument('-o', '--output_file', type=str, help='Output filename')
+	parser.add_argument('-r', '--readme', action="store_true", help='Print the readme.')
 	# parser.add_argument('-w', '--wipe', type=str, help='Delete data files to start fresh.')
 	args = parser.parse_args()
 	status = args.status
 	query = args.query
+	if args.readme:
+		print_readme()
+		sys.exit()
 	if status:
 		installed(True)
 		validate_chroma_database(collection)
@@ -415,10 +428,5 @@ if __name__ == "__main__":
 			with open(args.output_file, 'w') as f:
 				f.write(str(results) + '\n')
 			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
-
-
-
-
-
 
 
