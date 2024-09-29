@@ -3,7 +3,6 @@
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-from rich.spinner import Spinner	# for spinner
 import time
 
 console = Console(width=80) # for spinner
@@ -23,8 +22,10 @@ with console.status("[bold green]Loading...", spinner="dots"):
 	import shutil			# for deleting the vector database
 	from datetime import datetime	# for reporting the day/time of the last update
 	from FlagEmbedding import FlagReranker	# for reranking
-	
 	import time
+
+# Clear the terminal
+os.system('clear')
 
 # Definitions
 # -----------------------------------------------------------------
