@@ -1,0 +1,5 @@
+chromadb==0.5.5
+FlagEmbedding==1.2.10
+FlagEmbedding==1.2.11
+pandas==2.2.3
+rich==13.8.1

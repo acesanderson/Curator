@@ -1,5 +1,6 @@
 *.xlsx
 *.csv
-*.txt
+input.txt
+output.txt
 .chroma_database/
 .date_manifest
