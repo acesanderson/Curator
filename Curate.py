@@ -45,7 +45,7 @@ def installed(verbose = False) -> bool:
 			time.sleep(1)
 			console.print("\n")
 			console.print("[green]Status[/green]")
-			console.print("[yellow]----------------------------------------------[/yellow]")
+			console.print("[yellow]------------------------------------------------------------------------[/yellow]")
 			console.print("COSMO EXPORT:                      " + str(cosmo_export_exists()))
 			console.print("VECTOR DB:                         " + str(vector_db_exists()))
 			console.print("DATE MANIFEST:                     " + str(date_manifest_exists()))
@@ -291,7 +291,7 @@ def query_courses(collection: chromadb.Collection, query_string: str, k: int, n_
 	"""
 	Query the collection for a query string and return the top n results.
 	"""
-	console.print("[yellow]----------------------------------------------[/yellow]")
+	console.print("[yellow]------------------------------------------------------------------------[/yellow]")
 	with console.status(f'[bold green]Query: [/bold green][yellow]"{query_string}"[/yellow][green]...[/green]', spinner="dots"):
 		time.sleep(1)
 		results = query_vector_db(collection, query_string, n_results)
@@ -333,9 +333,8 @@ def batch_queries(queries: list[str], k, n) -> list[list[str]]:
 	for index, query in enumerate(queries):
 		results = query_courses(collection, query, k = k, n_results = n)
 		batch_results.append(results)
-		# console.print("[yellow]----------------------------------------------[/yellow]")
 		console.print(f"[green]Query {index + 1} of {len(queries)}:[/green] [yellow]{query}[/yellow]")
-		console.print("[yellow]----------------------------------------------[/yellow]")
+		console.print("[yellow]------------------------------------------------------------------------[/yellow]")
 		for result in results:
 			console.print(result)
 	return batch_results
@@ -422,12 +421,11 @@ if __name__ == "__main__":
 			sys.exit()
 		results = query_courses(collection, query, k = k, n_results = n)
 		console.print(f"[green]Query: {query}[/green]")
-		console.print("[yellow]----------------------------------------------[/yellow]")
+		console.print("[yellow]------------------------------------------------------------------------[/yellow]")
 		for result in results:
 			print(result)
 		if args.output_file:
 			with open(args.output_file, 'w') as f:
 				f.write(str(results) + '\n')
 			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
-
 
