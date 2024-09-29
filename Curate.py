@@ -328,7 +328,7 @@ def batch_queries(queries: list[str], k, n) -> list[list[str]]:
 	Wrapper query_courses for multiple queries.
 	"""
 	console.print('\n')
-	console.print(f"Processing {len(queries)} queries.")
+	console.print(f"Processing {len(queries)} queries. Press ctrl-c at any time to exit.")
 	batch_results = []
 	for index, query in enumerate(queries):
 		results = query_courses(collection, query, k = k, n_results = n)
