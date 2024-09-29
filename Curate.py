@@ -1,20 +1,28 @@
 # Hello message
 # -----------------------------------------------------------------
-GREEN = '\033[92m'	# for color in terminal
-YELLOW = '\033[93m'
-RESET = '\033[0m'
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+from rich.spinner import Spinner	# for spinner
+import time
 
-print(YELLOW + "==============================================" + RESET)
-print(GREEN + "Curator 1.0" + RESET)
-print(YELLOW + "==============================================" + RESET)
+console = Console() # for spinner
+
+text = Text("     Welcome to Curator: context-driven course recommendations      ", style="bold white")
+welcome_card = Panel(
+	text,
+	title=None,
+	expand=False,
+	border_style="bold",
+	padding=(1, 1),
+	width=90
+)
+console.print(welcome_card)
 
 # our imports
 # -----------------------------------------------------------------
 
-from rich.console import Console	# for spinner
-from rich.spinner import Spinner	# for spinner
-import time
-console = Console() # for spinner
+
 
 with console.status("[bold green]Loading...", spinner="dots"):
 	# time.sleep(1)
@@ -49,6 +57,9 @@ def installed(verbose = False) -> bool:
 	if verbose:
 		with console.status("[bold green]Status...", spinner="dots"):
 			time.sleep(1)
+			console.print("\n")
+			console.print("[green]Status[/green]")
+			console.print("[yellow]----------------------------------------------[/yellow]")
 			console.print("COSMO EXPORT:                      " + str(cosmo_export_exists()))
 			console.print("VECTOR DB:                         " + str(vector_db_exists()))
 			console.print("DATE MANIFEST:                     " + str(date_manifest_exists()))
@@ -275,7 +286,8 @@ def query_courses(collection: chromadb.Collection, query_string: str, k: int, n_
 	"""
 	Query the collection for a query string and return the top n results.
 	"""
-	with console.status(f"[bold green]Query: {query_string}...", spinner="dots"):
+	console.print("[yellow]----------------------------------------------[/yellow]")
+	with console.status(f'[bold green]Query: [/bold green][yellow]"{query_string}"...[/yellow]', spinner="dots"):
 		time.sleep(1)
 		results = query_vector_db(collection, query_string, n_results)
 		reranked_results = rerank_options(results, query_string, k)
@@ -306,16 +318,17 @@ def process_input_file(filename: str) -> list[str]:
 			data = f.readlines()
 		return [line.strip() for line in data]
 
-def batch_queries(queries: list[str]) -> list[list[str]]:
+def batch_queries(queries: list[str], k, n) -> list[list[str]]:
 	"""
 	Wrapper query_courses for multiple queries.
 	"""
-	print(f"Processing {len(queries)} queries.")
+	console.print('\n')
+	console.print(f"Processing {len(queries)} queries.")
 	batch_results = []
 	for index, query in enumerate(queries):
 		results = query_courses(collection, query, k = k, n_results = n)
 		batch_results.append(results)
-		console.print("[yellow]----------------------------------------------[/yellow]")
+		# console.print("[yellow]----------------------------------------------[/yellow]")
 		console.print(f"[green]Query {index + 1} of {len(queries)}: {query}[/green]")
 		console.print("[yellow]----------------------------------------------[/yellow]")
 		for result in results:
@@ -362,25 +375,24 @@ if __name__ == "__main__":
 		n = 50
 	if args.input_file:
 		queries = process_input_file(args.input_file)
-		results = batch_queries(queries)
+		results = batch_queries(queries, k, n)
 		if args.output_file:
 			with open(args.output_file, 'w') as f:
 				for result in results:
 					f.write(str(result) + '\n')
-			print(f"Results written to file: {args.output_file}")
+			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
 		sys.exit()
 	if '\n' in query:
 		queries = process_multiline_input(query)
-		results = batch_queries(queries)
+		results = batch_queries(queries, k, n)
 		if args.output_file:
 			with open(args.output_file, 'w') as f:
 				for result in results:
 					f.write(str(result) + '\n')
-			print(f"\n{YELLOW}Results written to file: {args.output_file}{RESET}")
+			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
 		sys.exit()
 	elif query:
 		results = query_courses(collection, query, k = k, n_results = n)
-		console.print("[yellow]----------------------------------------------[/yellow]")
 		console.print(f"[green]Query: {query}[/green]")
 		console.print("[yellow]----------------------------------------------[/yellow]")
 		for result in results:
@@ -388,7 +400,7 @@ if __name__ == "__main__":
 		if args.output_file:
 			with open(args.output_file, 'w') as f:
 				f.write(str(results) + '\n')
-			print(f"\n{YELLOW}Results written to file: {args.output_file}{RESET}")
+			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
 
 
 
