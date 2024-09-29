@@ -15,6 +15,9 @@ from FlagEmbedding import FlagReranker	# for reranking
 cosmo_file = "courselist_en_US.xlsx"
 date_manifest = ".date_manifest"
 vector_db = ".chroma_database"
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RESET = '\033[0m'
 
 # Functions
 # -----------------------------------------------------------------
@@ -136,9 +139,6 @@ def update_progress(current, total) -> None:
 	This takes the index and len(iter) of a for loop and creates a pretty
 	progress bar.
 	"""
-	GREEN = '\033[92m'
-	YELLOW = '\033[93m'
-	RESET = '\033[0m'
 	if current != total:
 		percent = float(current) * 100 / total
 		bar = GREEN + "=" * int(percent) + RESET + YELLOW + '-' * (100 - int(percent)) + RESET
@@ -258,10 +258,53 @@ def query_courses(collection: chromadb.Collection, query_string: str, k: int, n_
 	reranked_results = rerank_options(results, query_string, k)
 	return reranked_results
 
+## Batch processing
+# -----------------------------------------------------------------
+
+def process_multiline_input(text: str) -> str:
+	"""
+	Process a multiline text.
+	"""
+	return text.split('\n')
+
+def process_input_file(filename: str) -> list[str]:
+	"""
+	Process an input file -- assumption is that the data is in the first column.
+	"""
+	if filename.endswith(".csv"):
+		# note: there is no column title in the csv, so treat first cell as data
+		df = pd.read_csv(filename, header=None)
+		return df.iloc[:, 0].tolist()
+	elif filename.endswith(".xlsx"):
+		df = pd.read_excel(filename, header=None)
+		return df.iloc[:, 0].tolist()
+	elif filename.endswith(".txt"):
+		with open(filename, 'r') as f:
+			data = f.readlines()
+		return [line.strip() for line in data]
+
+def batch_queries(queries: list[str]) -> list[list[str]]:
+	"""
+	Wrapper query_courses for multiple queries.
+	"""
+	print(f"Processing {len(queries)} queries.")
+	batch_results = []
+	for index, query in enumerate(queries):
+		print(YELLOW + "----------------------------------------------" + RESET)
+		print(GREEN + f"Query {index + 1} of {len(queries)}: {query}" + RESET)
+		print(YELLOW + "----------------------------------------------" + RESET)
+		results = query_courses(collection, query, k = k, n_results = n)
+		batch_results.append(results)
+		for result in results:
+			print(result)
+	return batch_results
+
 if __name__ == "__main__":
 	# Check if everything is installed
 	if installed():
-		print("======================\nCurator 1.0.\n======================")
+		print(YELLOW + "==============================================" + RESET)
+		print(GREEN + "Curator 1.0" + RESET)
+		print(YELLOW + "==============================================" + RESET)
 		if update_required():
 			print("New data found. Updating our vector database...")
 			collection = update_vector_db()
@@ -280,7 +323,7 @@ if __name__ == "__main__":
 	parser.add_argument('-n', '--original_batch_size', type=int, help='Number of responses: this is 50 by default.')
 	parser.add_argument('-k', '--number_responses', type=int, help='Original pool size: this is 5 by default.')
 	parser.add_argument('-s', '--status', action="store_true", help="Print the status of the application")
-	# parser.add_argument('-i', '--input_file', type=str, help='Input filename (either csv or txt or excel; data needs to be in a single column)')
+	parser.add_argument('-i', '--input_file', type=str, help='Input filename (either csv or txt or excel; data needs to be in a single column)')
 	# parser.add_argument('-o', '--output_file', type=str, help='Output filename')
 	# parser.add_argument('-r', '--readme', action="store_true", help="Print the README")
 	args = parser.parse_args()
@@ -297,7 +340,15 @@ if __name__ == "__main__":
 		n = args.original_batch_size
 	else:
 		n = 50
-	if query:
+	if args.input_file:
+		queries = process_input_file(args.input_file)
+		results = batch_queries(queries)
+		sys.exit()
+	if '\n' in query:
+		queries = process_multiline_input(query)
+		results = batch_queries(queries)
+		sys.exit()
+	elif query:
 		results = query_courses(collection, query, k = k, n_results = n)
 		for result in results:
 			print(result)
