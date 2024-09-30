@@ -58,7 +58,7 @@ Note: This script uses only locally-hosted code, ensuring data security.
    ```
    pip install -r requirements.txt
    ```
-3. Place the Cosmo export Excel file (`courselist_en_US.xlsx`) in the same directory as the script
+3. Place the Cosmo export Excel file (`courselist_en_US.xlsx`) in the same directory as the script. NOTE: the script will not run if it does not detect this fiile in the same folder.
 
 ## How to Use
 
