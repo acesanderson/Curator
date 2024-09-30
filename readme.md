@@ -62,6 +62,8 @@ Note: This script uses only locally-hosted code, ensuring data security.
 
 ## How to Use
 
+==Depending on your system, you may need to use `python3` instead of `python` in the below example.==
+
 1. **First-time setup**:
    - Run the script. It will automatically create the vector database on first run.
    ```
