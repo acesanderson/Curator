@@ -4,3 +4,4 @@ input.txt
 output.txt
 .chroma_database/
 .date_manifest
+.DS_Store
