@@ -371,7 +371,7 @@ if __name__ == "__main__":
 			console.print(f"[green]{checkbox} Reranker installed.[/green]")
 			collection = create_vector_db()
 			console.print(f"[green]{checkbox} Vector database created: {vector_db}[/green]")
-			console.print("[italic yellow]First-time user? Run the script with -r to see the readme.[/italic yellow]")
+			console.print("[italic yellow]First-time user? Run the script with `python Curate.py -r` to see the readme.[/italic yellow]")
 	# Our arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('query', nargs='?', help='A query for the text.')
