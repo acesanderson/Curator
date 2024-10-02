@@ -51,14 +51,32 @@ This returns the top 5 most relevant courses by default.
 
 Note: This script uses only locally-hosted code, ensuring data security.
 
-## Installation
+## MacOS Installation for users new to Python (and command line)
 
-1. Ensure you have Python 3.7+ installed
-2. Install required packages:
-   ```
-   pip install -r requirements.txt
-   ```
-3. Place the Cosmo export Excel file (`courselist_en_US.xlsx`) in the same directory as the script. NOTE: the script will not run if it does not detect this fiile in the same folder.
+**Install homebrew if necessary**
+
+`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` 
+ 
+Use Homebrew to install the latest version of Python:                        
+`brew install python`
+ 
+Verify the installation (you need at least Python version 3.7):
+`python3 --version`
+
+**Install the repo**
+`git clone https://github.com/acesanderson/Curator`
+
+**Go to repo**
+`cd Curator`
+
+**Requirements**
+`pip install -r requirements.txt`
+
+**Download Cosmo export into same folder**
+https://microsoft.sharepoint.com/:x:/r/teams/LiL-course-lists/_layouts/15/Doc.aspx?sourcedoc=%7B09D6D7C5-4527-4E10-8D68-4E5103B953D7%7D&file=courselist_en_US.csv&action=default&mobileredirect=true
+
+**Start Curator**
+`python3 Curate.py`
 
 ## How to Use
 
