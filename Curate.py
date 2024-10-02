@@ -5,7 +5,7 @@ from rich.panel import Panel
 from rich.text import Text
 import time
 
-console = Console(width=000) # for spinner
+console = Console(width=100) # for spinner
 
 # our imports
 # -----------------------------------------------------------------
@@ -412,6 +412,7 @@ if __name__ == "__main__":
 	elif query:
 		if '\n' in query:
 			queries = process_multiline_input(query)
+			print(queries)
 			results = batch_queries(queries, k, n)
 			if args.output_file:
 				with open(args.output_file, 'w') as f:
