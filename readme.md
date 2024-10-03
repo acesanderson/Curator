@@ -73,6 +73,7 @@ Verify the installation (you need at least Python version 3.7):
 `pip install -r requirements.txt`
 
 **Download Cosmo export into same folder**
+
 Brian can provide link to the cosmo export.
 
 **Start Curator**
