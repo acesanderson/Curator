@@ -125,21 +125,3 @@ def mock_collection():
 		def count(self):
 			return 2
 	return MockCollection()
-
-"""
-This pytest script includes tests for most of the functions in your original code. Some key points:
-
-1. We use `pytest.fixture` to set up mock files and configurations.
-2. We use `patch` to mock certain functions and file paths.
-3. For functions that interact with the file system or external libraries like `chromadb`, we've created mock objects or patched the functions.
-4. Some complex functions like `create_vector_db` and `update_vector_db` might require more extensive mocking, which isn't fully implemented here.
-5. We've included parametrized tests for functions like `process_multiline_input`.
-
-To use this test script:
-
-1. Save it as `test_Curate.py` in the same directory as your main script.
-2. Ensure you have pytest installed (`pip install pytest`).
-3. Run `pytest test_Curate.py` from the command line.
-
-Note that you may need to adjust import statements and function names based on how your main script is structured. Also, some functions might require additional mocking or setup that isn't provided here. You can expand on these tests as needed for your specific use case.
-"""
