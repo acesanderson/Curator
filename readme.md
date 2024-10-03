@@ -73,7 +73,7 @@ Verify the installation (you need at least Python version 3.7):
 `pip install -r requirements.txt`
 
 **Download Cosmo export into same folder**
-https://microsoft.sharepoint.com/:x:/r/teams/LiL-course-lists/_layouts/15/Doc.aspx?sourcedoc=%7B09D6D7C5-4527-4E10-8D68-4E5103B953D7%7D&file=courselist_en_US.csv&action=default&mobileredirect=true
+Brian can provide link to the cosmo export.
 
 **Start Curator**
 `python3 Curate.py`
