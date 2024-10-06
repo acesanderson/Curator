@@ -179,7 +179,7 @@ def update_progress(current, total) -> None:
 	elif current == total:
 		print('\rProgress: |' + '=' * 100 + f'| {current} of {total} | 100% Complete\n')
 
-def load_to_chroma(collection: chromadb.Collection, data: list[tuple[str, str]]):
+def load_to_chroma(collection: chromadb.Collection, data: list[tuple[str, float]]):
 	"""
 	Load the descriptions into the chroma database.
 	"""
@@ -289,7 +289,7 @@ def rerank_options(options: list[tuple], query: str, k: int = 5) -> list[tuple]:
 	# Return the five best.
 	return ranked_results[:k]
 
-def query_courses(collection: chromadb.Collection, query_string: str, k: int = 5, n_results: int = 30) -> list[str]:
+def query_courses(collection: chromadb.Collection, query_string: str, k: int = 5, n_results: int = 30) -> list[tuple]:
 	"""
 	Query the collection for a query string and return the top n results.
 	"""
@@ -300,7 +300,7 @@ def query_courses(collection: chromadb.Collection, query_string: str, k: int = 5
 		reranked_results = rerank_options(results, query_string, k)
 	return reranked_results
 
-def Curate(query_string: str, k: int = 5, n_results: int = 30) -> list[str]:
+def Curate(query_string: str, k: int = 5, n_results: int = 30) -> list[tuple]:
 	"""
 	This is the importable version of the query_courses function.
 	"""
@@ -338,7 +338,7 @@ def process_input_file(filename: str) -> list[str]:
 			data = f.readlines()
 		return [line.strip() for line in data]
 
-def batch_queries(queries: list[str], k, n) -> list[list[str]]:
+def batch_queries(queries: list[str], k, n) -> list[list[tuple[str, float]]]:
 	"""
 	Wrapper query_courses for multiple queries.
 	"""
@@ -353,6 +353,60 @@ def batch_queries(queries: list[str], k, n) -> list[list[str]]:
 		for result in results:
 			console.print(result)
 	return batch_results
+
+# Output file
+# -----------------------------------------------------------------
+
+def create_hyperlink(url: str, course_title: str) -> str:
+	"""
+	Generate Excel / Google Sheets-friendly hyperlink.
+	"""
+	# url can have multiple urls separated by a comma, grab the first
+	url = url.split(',')[0]
+	return f'=HYPERLINK("{url}", "{course_title}")'
+
+def load_cosmo_metadata() -> pd.DataFrame:
+	"""
+	Load cosmo data for our output dataframe.
+	"""
+	# Load cosmo file as a dataframe
+	df = pd.read_excel(cosmo_file)
+	# Prepare the data
+	df = df.fillna('')
+	# Clean the text in both columns
+	df['Course Name EN'] = df['Course Name EN'].apply(clean_text)
+	df['Course Description'] = df['Course Description'].apply(clean_text)
+	# Remove duplicates from both columns
+	df = df.drop_duplicates(subset=['Course Name EN'])
+	# Filter for rows that are marked "ACTIVE" in the "Activation Status" column
+	df = df[df['Activation Status'] == 'ACTIVE']
+	# Filter it for rows that have a "Course Release Date" after 1/1/2018 OR have a value in "Course Updated Date" after 1/1/2018.
+	df = df[(df['Course Release Date'] > '2018-01-01') | (df['Course Updated Date'] > '2018-01-01')]
+	# First, create a new column called Course Link. This value is created from the two existing columns in df: create_hyperlink(LIL URL, Course Title EN)
+	df['Course Link'] = df.apply(lambda x: create_hyperlink(x['LIL URL'], x['Course Name EN']), axis=1)
+	# We want a new df that is a slice of original df, these columns: Course ID, Course Name EN, LI Level EN, Manager Level, Internal Library, Internal Subject, Course Duration, and Course Link
+	cosmo_df = df[['Course ID', 'Course Name EN', 'Course Link', 'Course Release Date', 'Course Updated Date', 'LI Level EN', 'Manager Level', 'Internal Library', 'Internal Subject', 'Visible Duration']]
+	return cosmo_df
+
+def create_output_dataframe(query: str, results: list[tuple[str, float]], cosmo_df: pd.DataFrame) -> pd.DataFrame:
+	"""
+	Create a dataframe from the results.
+	"""
+	# Convert results object (which is a list of tuples, first element is Course Name EN and second is Confidence) into a dataframe called results_df
+	results_df = pd.DataFrame(results, columns=['Course Name EN', 'Confidence'])
+	# Add a column titled "Query" which has the query string in every row.
+	results_df['Query'] = query
+	# Query should be the first column
+	results_df = results_df[['Query', 'Course Name EN', 'Confidence']]
+	# Now, we want to add the data from output_df to results_df, if Course Name EN matches Course Name EN in output_df. Add all columns from output_df except Course Name EN.
+	results_df = results_df.merge(cosmo_df, on='Course Name EN', how='left')
+	return results_df
+
+def create_output_dataframe_batch(results: list[list[tuple]]) -> pd.DataFrame:
+	"""
+	Bulk wrapper for create_output_dataframe.
+	"""
+	pass
 
 if __name__ == "__main__":
 	# Check if everything is installed
@@ -429,7 +483,7 @@ if __name__ == "__main__":
 			queries = process_multiline_input(query)
 			print(queries)
 			results = batch_queries(queries, k, n)
-			if args.output_file:
+			if args.output_file: # We'll use create_output_dataframe_batch here
 				with open(args.output_file, 'w') as f:
 					for result in results:
 						f.write(str(result) + '\n')
@@ -440,8 +494,10 @@ if __name__ == "__main__":
 		console.print("[yellow]------------------------------------------------------------------------[/yellow]")
 		for result in results:
 			print(result)
-		if args.output_file:
-			with open(args.output_file, 'w') as f:
-				f.write(str(results) + '\n')
-			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
-
+		if args.output_file: # We'll use create_output_dataframe here
+			with console.status("[bold green]Creating output and writing to CSV...", spinner="dots"):
+				with open(args.output_file + '.csv', 'w') as f:
+					cosmo_df = load_cosmo_metadata()
+					output_df = create_output_dataframe(query, results, cosmo_df)
+					output_df.to_csv(f, index=False)
+			console.print(f"\n[yellow]Results written to file: {args.output_file + '.csv'}[/yellow]")
