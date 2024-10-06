@@ -28,7 +28,6 @@ This returns the top 5 most relevant courses by default.
 ## How It Works
 
 ![Two stage ranking model](two-stage-pipeline.png "Two stage ranking model")
-
 *from [rerankers GitHub repo](https://www.answer.ai/posts/2024-09-16-rerankers.html)*
 
 1. **Data Source**: The script uses a Cosmo export (Excel file) containing course titles and descriptions.
