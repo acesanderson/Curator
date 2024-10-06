@@ -23,14 +23,15 @@ with console.status("[bold green]Loading...", spinner="dots"):
 	from datetime import datetime	# for reporting the day/time of the last update
 	from FlagEmbedding import FlagReranker	# for reranking
 	import time
+	from pathlib import Path
 
 # Definitions
 # -----------------------------------------------------------------
 
-dirpath = os.path.dirname(os.path.realpath(__file__)) + '/'
-cosmo_file = dirpath + "courselist_en_US.xlsx" # script needs three files to function; cosmo export, vector database, and date manifest
-date_manifest = dirpath + ".date_manifest"
-vector_db = dirpath + ".chroma_database"
+script_dir = Path(__file__).resolve().parent
+cosmo_file = script_dir / "courselist_en_US.xlsx" # script needs three files to function; cosmo export, vector database, and date manifest
+date_manifest = script_dir /  ".date_manifest"
+vector_db = script_dir / ".chroma_database"
 checkbox = "[✓]"
 
 # Functions
