@@ -27,9 +27,10 @@ with console.status("[bold green]Loading...", spinner="dots"):
 # Definitions
 # -----------------------------------------------------------------
 
-cosmo_file = "courselist_en_US.xlsx" # script needs three files to function; cosmo export, vector database, and date manifest
-date_manifest = ".date_manifest"
-vector_db = ".chroma_database"
+dirpath = os.path.dirname(os.path.realpath(__file__)) + '/'
+cosmo_file = dirpath + "courselist_en_US.xlsx" # script needs three files to function; cosmo export, vector database, and date manifest
+date_manifest = dirpath + ".date_manifest"
+vector_db = dirpath + ".chroma_database"
 checkbox = "[✓]"
 
 # Functions
