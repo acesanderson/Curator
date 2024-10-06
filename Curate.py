@@ -29,9 +29,9 @@ with console.status("[bold green]Loading...", spinner="dots"):
 # -----------------------------------------------------------------
 
 script_dir = Path(__file__).resolve().parent
-cosmo_file = script_dir / "courselist_en_US.xlsx" # script needs three files to function; cosmo export, vector database, and date manifest
-date_manifest = script_dir /  ".date_manifest"
-vector_db = script_dir / ".chroma_database"
+cosmo_file = str(script_dir / "courselist_en_US.xlsx") # script needs three files to function; cosmo export, vector database, and date manifest
+date_manifest = str(script_dir / ".date_manifest")
+vector_db = str(script_dir / ".chroma_database")
 checkbox = "[✓]"
 
 # Functions
@@ -159,7 +159,7 @@ def get_vector_db_collection() -> chromadb.Collection:
 	"""
 	Get the vector database collection.
 	"""
-	client = chromadb.PersistentClient(path=vector_db)
+	client = chromadb.PersistentClient(vector_db)
 	collection = client.get_collection(name="descriptions")
 	return collection
 
