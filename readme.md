@@ -27,6 +27,9 @@ This returns the top 5 most relevant courses by default.
 
 ## How It Works
 
+![Two stage ranking model](two-stage-pipeline.png "Two stage ranking model")
+
+
 1. **Data Source**: The script uses a Cosmo export (Excel file) containing course titles and descriptions.
 
 2. **Data Preprocessing**:
