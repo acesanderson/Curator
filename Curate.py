@@ -73,7 +73,7 @@ def date_manifest_exists() -> bool:
 	"""
 	Return True if the data manifest exists.
 	"""
-	return os.path.exists(".date_manifest")
+	return os.path.exists(date_manifest)
 
 def check_cosmo_export_last_modified() -> str:
 	"""
