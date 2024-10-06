@@ -482,10 +482,11 @@ if __name__ == "__main__":
 		queries = process_input_file(args.input_file)
 		results = batch_queries(queries, k, n)
 		if args.output_file: # We'll use create_output_dataframe_batch here
-			with open(args.output_file, 'w') as f:
-				for result in results:
-					f.write(str(result) + '\n')
-			console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
+			with console.status("[bold green]Creating output and writing to CSV...", spinner="dots"):
+				cosmo_df = load_cosmo_metadata()
+				bulk_df = create_output_dataframe_batch(queries, results, cosmo_df)
+				bulk_df.to_csv(args.output_file + '.csv', index=False)
+			console.print(f"\n[yellow]Results written to file: {args.output_file + '.csv'}[/yellow]")
 		sys.exit()
 	elif query:
 		if '\n' in query:
