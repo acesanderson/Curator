@@ -287,7 +287,7 @@ def rerank_options(options: list[tuple], query: str, k: int = 5) -> list[tuple]:
 	# Return the five best.
 	return ranked_results[:k]
 
-def query_courses(collection: chromadb.Collection, query_string: str, k: int, n_results: int) -> list[str]:
+def query_courses(collection: chromadb.Collection, query_string: str, k: int = 5, n_results: int = 30) -> list[str]:
 	"""
 	Query the collection for a query string and return the top n results.
 	"""
@@ -297,6 +297,19 @@ def query_courses(collection: chromadb.Collection, query_string: str, k: int, n_
 		results = query_vector_db(collection, query_string, n_results)
 		reranked_results = rerank_options(results, query_string, k)
 	return reranked_results
+
+def Curate(query_string: str, k: int = 5, n_results: int = 30) -> list[str]:
+	"""
+	This is the importable version of the query_courses function.
+	"""
+	if installed():
+		if update_required():
+			print("New data found. Updating our vector database...")
+			collection = update_vector_db()
+		else:
+			collection = get_vector_db_collection()
+	results = query_courses(collection = collection, query_string = query_string, k = k, n_results = n_results)
+	return results
 
 ## Batch processing
 # -----------------------------------------------------------------
