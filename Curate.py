@@ -254,6 +254,7 @@ def update_vector_db() -> chromadb.Collection:
 def load_reranker() -> None:
 	"""
 	Load the reranker; this can take a while when first initializing.
+	Think of this as an import statement.
 	"""
 	with console.status(f'[bold green]Installing reranking model... This may take a while. [/bold green]', spinner="dots"):
 		reranker = FlagReranker('BAAI/bge-reranker-large', use_fp16=True) # Setting use_fp16 to True speeds up computation with a slight performance degradation
@@ -385,7 +386,7 @@ def load_cosmo_metadata() -> pd.DataFrame:
 	# First, create a new column called Course Link. This value is created from the two existing columns in df: create_hyperlink(LIL URL, Course Title EN)
 	df['Course Link'] = df.apply(lambda x: create_hyperlink(x['LIL URL'], x['Course Name EN']), axis=1)
 	# We want a new df that is a slice of original df, these columns: Course ID, Course Name EN, LI Level EN, Manager Level, Internal Library, Internal Subject, Course Duration, and Course Link
-	cosmo_df = df[['Course ID', 'Course Name EN', 'Course Link', 'Course Release Date', 'Course Updated Date', 'LI Level EN', 'Manager Level', 'Internal Library', 'Internal Subject', 'Visible Duration']]
+	cosmo_df = df[['Course ID', 'Course Name EN', 'Course Link', 'Course Description', 'Course Release Date', 'Course Updated Date', 'LI Level EN', 'Manager Level', 'Internal Library', 'Internal Subject', 'Visible Duration']]
 	return cosmo_df
 
 def create_output_dataframe(query: str, results: list[tuple[str, float]], cosmo_df: pd.DataFrame) -> pd.DataFrame:
@@ -402,11 +403,19 @@ def create_output_dataframe(query: str, results: list[tuple[str, float]], cosmo_
 	results_df = results_df.merge(cosmo_df, on='Course Name EN', how='left')
 	return results_df
 
-def create_output_dataframe_batch(results: list[list[tuple]]) -> pd.DataFrame:
+def create_output_dataframe_batch(queries: list, results: list[list[tuple]], cosmo_df: pd.DataFrame) -> pd.DataFrame:
 	"""
 	Bulk wrapper for create_output_dataframe.
 	"""
-	pass
+	# Validate that lists are same length.
+	if len(queries) != len(results):
+		print("Queries and results are not the same length.")
+		return None
+	bulk_df = pd.DataFrame()
+	for index, query in enumerate(queries):
+		results_df = create_output_dataframe(query, results[index], cosmo_df)
+		bulk_df = pd.concat([bulk_df, results_df])
+	return bulk_df
 
 if __name__ == "__main__":
 	# Check if everything is installed
@@ -472,7 +481,7 @@ if __name__ == "__main__":
 	if args.input_file:
 		queries = process_input_file(args.input_file)
 		results = batch_queries(queries, k, n)
-		if args.output_file:
+		if args.output_file: # We'll use create_output_dataframe_batch here
 			with open(args.output_file, 'w') as f:
 				for result in results:
 					f.write(str(result) + '\n')
@@ -481,13 +490,13 @@ if __name__ == "__main__":
 	elif query:
 		if '\n' in query:
 			queries = process_multiline_input(query)
-			print(queries)
 			results = batch_queries(queries, k, n)
 			if args.output_file: # We'll use create_output_dataframe_batch here
-				with open(args.output_file, 'w') as f:
-					for result in results:
-						f.write(str(result) + '\n')
-				console.print(f"\n[yellow]Results written to file: {args.output_file}[/yellow]")
+				with console.status("[bold green]Creating output and writing to CSV...", spinner="dots"):
+					cosmo_df = load_cosmo_metadata()
+					bulk_df = create_output_dataframe_batch(queries, results, cosmo_df)
+					bulk_df.to_csv(args.output_file + '.csv', index=False)
+				console.print(f"\n[yellow]Results written to file: {args.output_file + '.csv'}[/yellow]")
 			sys.exit()
 		results = query_courses(collection, query, k = k, n_results = n)
 		console.print(f"[green]Query: {query}[/green]")
@@ -500,4 +509,4 @@ if __name__ == "__main__":
 					cosmo_df = load_cosmo_metadata()
 					output_df = create_output_dataframe(query, results, cosmo_df)
 					output_df.to_csv(f, index=False)
-			console.print(f"\n[yellow]Results written to file: {args.output_file + '.csv'}[/yellow]")
+				console.print(f"\n[yellow]Results written to file: {args.output_file + '.csv'}[/yellow]")

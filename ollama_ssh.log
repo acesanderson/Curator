@@ -1,1 +1,1 @@
-ssh: connect to host 10.0.0.82 port 2223: Operation timed out
+bind [127.0.0.1]:11434: Address already in use
