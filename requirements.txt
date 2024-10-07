@@ -1,5 +1,4 @@
-chromadb==0.5.5
+chromadb==0.5.11
 FlagEmbedding==1.2.11
 pandas==2.2.3
-rich==13.8.1
-peft==0.13.0
+rich==13.9.2
