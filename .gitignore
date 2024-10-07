@@ -8,3 +8,4 @@ output.txt
 changes.txt
 .flashrank_cache/
 model_testing/
+*.log
