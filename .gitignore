@@ -6,5 +6,4 @@ output.txt
 .date_manifest
 .DS_Store
 changes.txt
-load_rerankers.py
 .flashrank_cache/
