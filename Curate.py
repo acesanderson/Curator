@@ -432,7 +432,10 @@ if __name__ == "__main__":
 		else:
 			# First time! Installation with a little bit of fanfare.
 			# Clear the terminal
-			os.system('clear')
+			if os.name == 'nt':
+				os.system('cls')
+			else:
+				os.system('clear')
 			text = Text("     Welcome to Curator: context-driven course recommendations      ", style="bold white")
 			welcome_card = Panel(
 				text,
