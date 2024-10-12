@@ -56,31 +56,80 @@ Note: This script uses only locally-hosted code, ensuring data security.
 
 ## MacOS Installation for users new to Python (and command line)
 
-**Install homebrew if necessary**
+**Setting up on Windows:**
 
-`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` 
- 
-Use Homebrew to install the latest version of Python:                        
-`brew install python`
- 
-Verify the installation (you need at least Python version 3.7):
-`python3 --version`
+1.  Download and install Python version 3.12.4 from their official website ([here](https://www.python.org/downloads/windows/))
+- Be sure to check the box “Add Python 3.x to PATH” at the beginning of installation      
 
-**Install the repo**
-`git clone https://github.com/acesanderson/Curator`
+2.  Once installed, verify the installation
+    1.  Open Command Prompt (you can search for “cmd” in the Start menu) 
+    2.  Type into Command Prompt: **python –version**
+    3.  You should then see the Python version you are currently running, it will need to be least version 3.7
+        
+3.  Download and install Git
+    1.  Download and install Git for Windows ([here](https://git-scm.com/downloads/win))
+    2.  During installation, keep the default setting which will add Git to your PATH
+        
+4.  Create a folder on your Desktop and call it something like “Curator” or “Curation Script”. For this documentation I will imagine you use “Curator”
 
-**Go to repo**
-`cd Curator`
+5.  Clone the repository
+    1.  Open the Command Prompt and navigate to the folder where you want to place your project (the one you created in Step 4). 
+        1.  Use the following command: **cd %USERPROFILE%\\Desktop\\Curator**
+    2.  Clone the repository
+        1.  Type: **git clone https://github.com/acesanderson/Curator**
+    3.  Change to the directory of the repository
+        1.  **cd Curator**
+            
+6.  Install the requirements
+    1.  Type: pip install -r requirements.txt
+        
+7.  Download the Cosmo export file and place it in the same folder you created in Step 4
 
-**Requirements**
-`pip install -r requirements.txt`
+8.  Run the script
+    1.  Type: **python Curate.py “insert keywords here”**
+    2.  When you run this for the first time, you will have to wait several minutes for the vector database to be created. This will happen automatically and you will be alerted when it is set up.
 
-**Download Cosmo export into same folder**
+**Setting up on MacOs:**
 
-Brian can provide link to the cosmo export.
+1.  From the GitHub repo click the green “Code” dropdown and download the Zip file
+    1.  Go to Finder on your Mac, go to your Downloads, unzip the folder, move it to your Desktop, and rename it “Curator” (the default name will be “Curator-main”)
 
-**Start Curator**
-`python3 Curate.py`
+2.  Go to [go/cosmoexports](https://microsoft.sharepoint.com/teams/LiL-course-lists/Shared Documents/Forms/AllItems.aspx?id=/teams/LiL-course-lists/Shared Documents/course-lists/COSMO exports&p=true&ga=1) and download the file called courselist\_en\_US.csv
+    1.  Go to Finder and move this file from your Downloads to your newly created “Curator” folder
+    2.  Once in the Curator folder, duplicate this document, and save the duplicate as a .xlsx file. Keep this duplicate in the same folder. 
+
+3.  Open up Terminal. A quick way to do this on Mac is to press Cmd+Space and search for Terminal
+
+4.   Once open, copy and paste the following line into the Terminal and press Enter. 
+    1.  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    2.  You may be prompted to input your password. This will be the same password you use to log in to your device. Type the password and press Enter. Then press Enter again when prompted. 
+        
+5.  Copy and paste the following command into your Terminal and press Enter. This will install Python. 
+    1.  brew install python
+        
+6.  Once complete, verify the installation using the following command. The number that appears needs to be at least version 3.7
+    1.  python3 --version
+        
+7.  Install the repo using the following command. 
+    1.  git clone https://github.com/acesanderson/Curator
+        
+8.  Go to the repo using the following command. 
+    1.  cd Curator
+        
+9.  Install the necessary package requirements using the following command. 
+    1.  pip install -r requirements.txt
+        
+10.  Start the curator script using the following command. 
+    1.  python3 Curate.py
+        
+11.  You may receive an alert to download openpyxl or to upgrade pip. If this occurs, type these commands, depending on the alert. 
+    1.  pip install openpyxl
+    2.  python3 -m pip install --upgrade pip
+        
+12.  At this point, the script will create the vector database. This may take as long as 10 minutes to complete. You can monitor the progress in the terminal. Once complete, you will be alerted, and you will be able to run your queries. 
+    
+13.  To run a basic query use the following command.
+    1.  python3 Curate.py “input query here”
 
 ## How to Use
 
