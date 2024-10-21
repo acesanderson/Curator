@@ -161,6 +161,29 @@ Note: This script uses only locally-hosted code, ensuring data security.
    python curate.py -s
    ```
 
+## As Python Module
+
+The Curate function can also be imported and used as a Python module. Here's an example:
+
+```
+>>> import Curator
+>>> from Curator import Curate
+>>> c=Curate("machine learning with javascript")
+------------------------------------------------------------------------
+>>> c
+[('Learning TensorFlow with JavaScript', 3.30859375), ('Level Up: JavaScript', 0.61474609375), ('JavaScript: Functions', 0.2330322265625), ('AI Programming for JavaScript Developers', -0.044281005859375), ('Hands-On Introduction: JavaScript', -0.32568359375)]
+```
+
+You will either need to:
+- add to $PYTHONPATH the path to the directory containing the Curator.py file, or
+- install the Curator package using pip:
+
+```bash
+pip install . # from the directory containing Curate.py.
+```
+
+Then you can import and use the Curate function as shown above.
+
 ## Best Practices
 
 - Provide detailed queries for better results. The script matches your query to courses based on semantic similarity to their descriptions.
