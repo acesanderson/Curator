@@ -189,7 +189,8 @@ Then you can import and use the Curate function as shown above.
 - Provide detailed queries for better results. The script matches your query to courses based on semantic similarity to their descriptions.
 - While course titles can work as queries, you'll get better results by providing more context.
 - For batch processing, ensure your input file has one query per line or in the first column.
-
+- You can change two parameters: the number of initial results to retrieve (`-n`) and the number of final recommendations to return (`-k`). The default values are 50 and 5, respectively. Why change the number of initial results? The more results you retrieve, the more accurate the final recommendations might be, though potentially at the cost of longer processing times.
+ 
 ## Maintenance
 
 - The script automatically checks if the Cosmo export has been updated and refreshes the vector database accordingly.
