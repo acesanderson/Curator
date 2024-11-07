@@ -6,6 +6,8 @@ WORKDIR /app
 
 # Copy the requirements file into the container at /app
 COPY requirements.txt /app/
+COPY courselist_en_US.xlsx /app/
+COPY input.txt /app/
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
@@ -14,6 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app
 
 # Command to run the script
-CMD ["python", "Curate.py", "--help"]
+CMD ["python", "Curate.py", "-i", "input.txt", "-o", "output"]
 
 
