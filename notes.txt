@@ -1,0 +1,3 @@
+- double check for hallucinations
+- change width of progress bar (make it smaller)
+- double check that it's only ACTIVE courses
