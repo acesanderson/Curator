@@ -54,7 +54,7 @@ This returns the top 5 most relevant courses by default.
 
 Note: This script uses only locally-hosted code, ensuring data security.
 
-## MacOS Installation for users new to Python (and command line)
+## Installation for users new to Python (and command line)
 
 **Setting up on Windows:**
 
