@@ -94,7 +94,7 @@ Note: This script uses only locally-hosted code, ensuring data security.
 1.  From the GitHub repo click the green “Code” dropdown and download the Zip file
     1.  Go to Finder on your Mac, go to your Downloads, unzip the folder, move it to your Desktop, and rename it “Curator” (the default name will be “Curator-main”)
 
-2.  Go to [go/cosmoexports](https://microsoft.sharepoint.com/teams/LiL-course-lists/Shared Documents/Forms/AllItems.aspx?id=/teams/LiL-course-lists/Shared Documents/course-lists/COSMO exports&p=true&ga=1) and download the file called courselist\_en\_US.csv
+2.  Go to [go/cosmoexports] and download the file called courselist\_en\_US.csv
     1.  Go to Finder and move this file from your Downloads to your newly created “Curator” folder
     2.  Once in the Curator folder, duplicate this document, and save the duplicate as a .xlsx file. Keep this duplicate in the same folder. 
 
