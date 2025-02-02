@@ -4,14 +4,15 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 import time
-import os
+import sys, os
+import logging
 
-# Tesnorflow is a chatty Kathy
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-console = Console(width=100)  # for spinner
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # FATAL
+logging.getLogger("tensorflow").setLevel(logging.FATAL)
 
 # our imports
 # -----------------------------------------------------------------
+console = Console(width=100)  # for spinner
 
 with console.status("[green]Loading...", spinner="dots"):
     # time.sleep(1)
@@ -27,6 +28,7 @@ with console.status("[green]Loading...", spinner="dots"):
     from FlagEmbedding import FlagReranker  # for reranking
     import time
     from pathlib import Path
+
 
 # Definitions
 # -----------------------------------------------------------------
