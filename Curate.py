@@ -3,12 +3,11 @@
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+
+from rerank import rerank_options
 import time
 import sys, os
-import logging
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # FATAL
-logging.getLogger("tensorflow").setLevel(logging.FATAL)
 
 # our imports
 # -----------------------------------------------------------------
@@ -25,9 +24,9 @@ with console.status("[green]Loading...", spinner="dots"):
     import re  # for cleaning text
     import shutil  # for deleting the vector database
     from datetime import datetime  # for reporting the day/time of the last update
-    from FlagEmbedding import FlagReranker  # for reranking
     import time
     from pathlib import Path
+    from FlagEmbedding import FlagReranker  # for reranking
 
 
 # Definitions
@@ -332,27 +331,32 @@ def query_vector_db(
     return list(zip(ids, documents))
 
 
-def rerank_options(options: list[tuple], query: str, k: int = 5) -> list[tuple]:
-    """
-    Reranking magic.
-    """
-    reranker = FlagReranker(
-        "BAAI/bge-reranker-large", use_fp16=True
-    )  # Setting use_fp16 to True speeds up computation with a slight performance degradation
-    ranked_results: list[tuple] = []
-    for option in options:
-        course = option[0]  # This is "id" from the Chroma output.
-        TOC = option[1]  # This is "document" from the Chroma output.
-        score = reranker.compute_score([query, TOC])
-        ranked_results.append((course, score))
-    # sort ranked_results by highest score
-    ranked_results.sort(key=lambda x: x[1], reverse=True)
-    # Return the five best.
-    return ranked_results[:k]
+# def rerank_options(options: list[tuple], query: str, k: int = 5) -> list[tuple]:
+#     """
+#     Reranking magic.
+#     """
+#     reranker = FlagReranker(
+#         "BAAI/bge-reranker-large", use_fp16=True
+#     )  # Setting use_fp16 to True speeds up computation with a slight performance degradation
+#     ranked_results: list[tuple] = []
+#     for option in options:
+#         course = option[0]  # This is "id" from the Chroma output.
+#         TOC = option[1]  # This is "document" from the Chroma output.
+#         score = reranker.compute_score([query, TOC])
+#         ranked_results.append((course, score))
+#     # sort ranked_results by highest score
+#     ranked_results.sort(key=lambda x: x[1], reverse=True)
+#     # Return the five best.
+#     return ranked_results[:k]
+#
 
 
 def query_courses(
-    collection: chromadb.Collection, query_string: str, k: int = 5, n_results: int = 30
+    collection: chromadb.Collection,
+    query_string: str,
+    k: int = 5,
+    n_results: int = 30,
+    model_name: str = "bge",
 ) -> list[tuple]:
     """
     Query the collection for a query string and return the top n results.
@@ -366,11 +370,13 @@ def query_courses(
     ):
         time.sleep(1)
         results = query_vector_db(collection, query_string, n_results)
-        reranked_results = rerank_options(results, query_string, k)
+        reranked_results = rerank_options(results, query_string, k, model_name)
     return reranked_results
 
 
-def Curate(query_string: str, k: int = 5, n_results: int = 30) -> list[tuple]:
+def Curate(
+    query_string: str, k: int = 5, n_results: int = 30, model_name: str = "mxbai"
+) -> list[tuple]:
     """
     This is the importable version of the query_courses function.
     """
@@ -381,7 +387,11 @@ def Curate(query_string: str, k: int = 5, n_results: int = 30) -> list[tuple]:
         else:
             collection = get_vector_db_collection()
     results = query_courses(
-        collection=collection, query_string=query_string, k=k, n_results=n_results
+        collection=collection,
+        query_string=query_string,
+        k=k,
+        n_results=n_results,
+        model_name=model_name,
     )
     return results
 

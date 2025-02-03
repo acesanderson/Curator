@@ -1,0 +1,160 @@
+{
+    "bge": [
+        [
+            "Business Analytics: Sales Data",
+            0.33377939462661743
+        ],
+        [
+            "Sales Forecasting",
+            0.3216599225997925
+        ],
+        [
+            "Salesforce Essential Training (2021)",
+            0.12826550006866455
+        ],
+        [
+            "Inclusive Selling for Leaders",
+            0.1106390655040741
+        ],
+        [
+            "Onboarding New Salespeople",
+            0.0488620325922966
+        ]
+    ],
+    "mxbai": [
+        [
+            "Sales Management Foundations",
+            5.782408237457275
+        ],
+        [
+            "Transitioning to Management for Salespeople",
+            5.743706226348877
+        ],
+        [
+            "Sales Pipeline Management",
+            4.881530284881592
+        ],
+        [
+            "Sales Management. Simplified. (Blinkist Summary)",
+            4.1327080726623535
+        ],
+        [
+            "How to Motivate Your Sales Teams",
+            3.9912972450256348
+        ]
+    ],
+    "ce": [
+        [
+            "Sales Management Foundations",
+            6.059980392456055
+        ],
+        [
+            "Transitioning to Management for Salespeople",
+            5.2792768478393555
+        ],
+        [
+            "Sales Management. Simplified. (Blinkist Summary)",
+            5.135986328125
+        ],
+        [
+            "Sales Pipeline Management",
+            4.965907096862793
+        ],
+        [
+            "Sales Performance Measurement and Reporting",
+            4.353947639465332
+        ]
+    ],
+    "flash": [
+        [
+            "Sales Management. Simplified. (Blinkist Summary)",
+            0.9986886382102966
+        ],
+        [
+            "Sales Management Foundations",
+            0.9979374408721924
+        ],
+        [
+            "Transitioning to Management for Salespeople",
+            0.9968739748001099
+        ],
+        [
+            "Sales Pipeline Management",
+            0.9967695474624634
+        ],
+        [
+            "Sales Time Management",
+            0.9851455688476562
+        ]
+    ],
+    "colbert": [
+        [
+            "Sales Management. Simplified. (Blinkist Summary)",
+            2.158113956451416
+        ],
+        [
+            "Sales Management Foundations",
+            2.028015613555908
+        ],
+        [
+            "Transitioning to Management for Salespeople",
+            1.9082854986190796
+        ],
+        [
+            "Sales Time Management",
+            1.8919013738632202
+        ],
+        [
+            "Sales Pipeline Management",
+            1.882562279701233
+        ]
+    ],
+    "llm": "Error: cannot import name 'GEMMA2_ATTENTION_CLASSES' from 'transformers.models.gemma2.modeling_gemma2' (/home/bianders/Brian_Code/.Magnus/lib/python3.12/site-packages/transformers/models/gemma2/modeling_gemma2.py)",
+    "mini": [
+        [
+            "Sales Management. Simplified. (Blinkist Summary)",
+            0.9462262392044067
+        ],
+        [
+            "Sales Management Foundations",
+            0.8434634208679199
+        ],
+        [
+            "Transitioning to Management for Salespeople",
+            0.6988794207572937
+        ],
+        [
+            "Salesforce Essential Training (2021)",
+            0.6837311387062073
+        ],
+        [
+            "Sales Pipeline Management",
+            0.682472288608551
+        ]
+    ],
+    "t5": [
+        [
+            "Sales Management. Simplified. (Blinkist Summary)",
+            0.9923872947692871
+        ],
+        [
+            "Sales Management Foundations",
+            0.98130863904953
+        ],
+        [
+            "Sales Pipeline Management",
+            0.8919246196746826
+        ],
+        [
+            "Transitioning to Management for Salespeople",
+            0.8517665266990662
+        ],
+        [
+            "Sales Time Management",
+            0.6844767332077026
+        ]
+    ],
+    "jina": "Error: 'results'",
+    "cohere": "Error: 'results'",
+    "rankllm": "Error: '<' not supported between instances of 'NoneType' and 'NoneType'"
+}
