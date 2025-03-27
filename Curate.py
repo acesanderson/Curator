@@ -695,15 +695,15 @@ if __name__ == "__main__":
             console.print(f"[green]Device detected: {device}[/green]")
             console.print(f"[green]{checkbox} Cosmo export found: {cosmo_file}[/green]")
             collection = create_vector_db()
-            console.print(
-                f"[green]{checkbox} Vector database created: {vector_db}[/green]"
-            )
             # Delete the db file at cache_path
             if os.path.exists(cache_path):
                 os.remove(cache_path)
                 console.print(
                     f"[green]{checkbox} Cache file refreshed: {cache_path}[/green]"
                 )
+            console.print(
+                f"[green]{checkbox} Vector database created: {vector_db}[/green]"
+            )
             console.print(
                 "[italic yellow]First-time user? Run the script with `python Curate.py -r` to see the readme.[/italic yellow]"
             )

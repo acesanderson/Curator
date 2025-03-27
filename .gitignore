@@ -9,3 +9,5 @@ changes.txt
 .flashrank_cache/
 model_testing/
 *.log
+*.pyc
+*.db
