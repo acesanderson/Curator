@@ -3,30 +3,91 @@
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
-
-from rerank import rerank_options
 import time
 import sys, os
+import logging
+import contextlib
 
+
+# Tensorflow + pytorch have c++ libraries that are very verbose.
+@contextlib.contextmanager
+def silence_all_output():
+    """
+    Context manager that completely silences both stdout and stderr
+    by redirecting to /dev/null at the OS level.
+    """
+    # Save original file descriptors
+    old_stdout = os.dup(1)
+    old_stderr = os.dup(2)
+
+    # Close and redirect stdout and stderr
+    os.close(1)
+    os.close(2)
+    os.open(os.devnull, os.O_WRONLY | os.O_CREAT)
+    os.dup2(1, 2)  # Redirect stderr to the same place as stdout
+
+    try:
+        # Run the code block inside the context manager
+        yield
+    finally:
+        # Restore original stdout and stderr
+        os.dup2(old_stdout, 1)
+        os.dup2(old_stderr, 2)
+        os.close(old_stdout)
+        os.close(old_stderr)
+
+
+# Similarly, sentence transformers noisily reports all embedding creation, so we are setting global python logging to warnings only.
+logging.basicConfig(level=logging.WARNING)
 
 # our imports
 # -----------------------------------------------------------------
 console = Console(width=100)  # for spinner
 
 with console.status("[green]Loading...", spinner="dots"):
-    # time.sleep(1)
-    import chromadb  # for vector database
-    import argparse  # for parsing command line arguments
-    import pandas as pd  # for reading cosmo export + preparing data for vector database
-    import os  # for getting date / time data from file
-    import sys  # for sys.exit
-    import html  # for cleaning text
-    import re  # for cleaning text
-    import shutil  # for deleting the vector database
-    from datetime import datetime  # for reporting the day/time of the last update
-    import time
-    from pathlib import Path
-    from FlagEmbedding import FlagReranker  # for reranking
+    with silence_all_output():
+        from Curator.rerank import rerank_options
+        from Curator.cache.cache import CuratorCache, CachedQuery, CachedResponse
+        import chromadb  # for vector database
+        from chromadb.utils.embedding_functions import (
+            SentenceTransformerEmbeddingFunction,
+        )
+        import argparse  # for parsing command line arguments
+        import pandas as pd  # for reading cosmo export + preparing data for vector database
+        import os  # for getting date / time data from file
+        import sys  # for sys.exit
+        import html  # for cleaning text
+        import re  # for cleaning text
+        import shutil  # for deleting the vector database
+        from datetime import datetime  # for reporting the day/time of the last update
+        import time
+        from pathlib import Path
+        import torch
+        import asyncio
+        from asyncio import Semaphore
+        from typing import Literal
+
+
+# Configs
+# -----------------------------------------------------------------
+implementation: Literal["sync", "async"] = "sync"
+model: Literal["gtr-t5-large", "all-MiniLM-L6-v2"] = "all-MiniLM-L6-v2"
+device: Literal["cpu", "cuda", "mps", ""] = ""
+
+# Detect device
+if torch.cuda.is_available():
+    device = "cuda"
+elif torch.backends.mps.is_available():
+    device = "mps"
+else:
+    device = "cpu"
+
+# Set SentenceTransformer's logger to only show warnings and above
+logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
+logging.getLogger("transformers").setLevel(logging.WARNING)
+logging.getLogger("pytorch_transformers").setLevel(logging.WARNING)
+logging.basicConfig(level=logging.WARNING)
+ef = SentenceTransformerEmbeddingFunction(model_name=model, device=device)
 
 
 # Definitions
@@ -39,6 +100,9 @@ cosmo_file = str(
 date_manifest = str(script_dir / ".date_manifest")
 vector_db = str(script_dir / ".chroma_database")
 checkbox = "[✓]"
+# Set up the cache; set to None if you do not want caching.
+cache = CuratorCache()
+cache_path = script_dir / "cache" / ".curator_cache.db"
 
 # Functions
 # -----------------------------------------------------------------
@@ -139,10 +203,13 @@ def clean_text(text):
     return text.strip()
 
 
-def load_cosmo_export() -> list[tuple]:
+def load_cosmo_export() -> pd.DataFrame:
     """
     Load the cosmo export file.
     """
+    # Clear our cache
+    if cache:
+        cache.clear_cache()
     df = pd.read_excel(cosmo_file, engine="openpyxl")
     # Prepare the data
     df = df.fillna("")
@@ -158,6 +225,15 @@ def load_cosmo_export() -> list[tuple]:
         (df["Course Release Date"] > "2018-01-01")
         | (df["Course Updated Date"] > "2018-01-01")
     ]
+    return df  # type: ignore
+
+
+def get_data() -> list[tuple]:
+    """
+    Get the data from the cosmo export file.
+    Wrapper that calls load_cosmo_export.
+    """
+    df = load_cosmo_export()
     # Get a list of tuples, first item is Course Name EN, second item is Course Description
     data = list(zip(df["Course Name EN"], df["Course Description"]))
     return data
@@ -192,7 +268,7 @@ def get_vector_db_collection() -> chromadb.Collection:
     Get the vector database collection.
     """
     client = chromadb.PersistentClient(vector_db)
-    collection = client.get_collection(name="descriptions")
+    collection = client.get_collection(name="descriptions", embedding_function=ef)
     return collection
 
 
@@ -238,6 +314,36 @@ def load_to_chroma(collection: chromadb.Collection, data: list[tuple[str, float]
     print("Data loaded to chroma database.")
 
 
+async def _load_to_chroma_async(
+    collection: chromadb.Collection, chunk: list, sem: Semaphore
+):
+    pass
+
+
+async def load_to_chroma_async(
+    collection: chromadb.Collection, data: list[tuple[str, float]], sem: Semaphore
+):
+    """
+    Load the descriptions into the chroma database asynchronously.
+    """
+
+    # Batch items into chunks of 100; enumerate them so we can pass the index to the coroutine
+    async def load_batch(collection, chunk, sem):
+        async with sem:
+            ids = [datum[0] for datum in chunk]
+            documents = [datum[1] for datum in chunk]
+            await collection.add(
+                ids=ids,
+                documents=documents,
+            )
+            update_progress(len(chunk), len(data))
+
+    chunks = list(enumerate([data[i : i + 100] for i in range(0, len(data), 100)]))
+    print(f"Loading {len(chunks)} docs into Chroma...")
+    coroutines = [load_batch(collection, chunk, sem) for chunk in chunks]
+    await asyncio.gather(*coroutines)
+
+
 def validate_chroma_database(collection: chromadb.Collection) -> None:
     """
     Validate the chroma database.
@@ -259,17 +365,33 @@ def create_vector_db() -> chromadb.Collection:
     console.print(
         "[green]Generating embeddings for the course descriptions. This may take a while.[/green]"
     )
-    # Delete existing database
-    if os.path.exists(vector_db):
-        shutil.rmtree(vector_db)
-    # Create the new database
-    client = chromadb.PersistentClient(path=vector_db)
-    # Create the collection
-    collection = client.create_collection(name="descriptions")
     # Load cosmo export
-    data = load_cosmo_export()
-    # Add the data to the collection
-    load_to_chroma(collection, data)
+    data = get_data()
+    if implementation == "sync":
+        # Delete existing database
+        if os.path.exists(vector_db):
+            shutil.rmtree(vector_db)
+        # Create the new database
+        client = chromadb.PersistentClient(path=vector_db)
+        # Create the collection
+        collection = client.create_collection(
+            name="descriptions", embedding_function=ef
+        )
+        # Add the data to the collection
+        load_to_chroma(collection, data)
+    # elif implementation == "async":
+    #     # Create a semaphore to limit the number of concurrent requests
+    #     sem = Semaphore(10)
+    #     # Load our client and collection
+    #     client = await chromadb.AsyncHttpClient(port=8001)
+    #     try:
+    #         await client.delete_collection(name="Curator")
+    #     except:
+    #         pass
+    #     collection = await client.create_collection(
+    #         name="Curator", embedding_function=ef
+    #     )
+    #     load_to_chroma_async(collection, data, sem)
     # Write the date manifest
     print("Writing date manifest.")
     write_date_manifest(str(check_cosmo_export_last_modified()))
@@ -301,18 +423,10 @@ def update_vector_db() -> chromadb.Collection:
     return collection
 
 
-def load_reranker() -> None:
+def get_all_ids() -> list[int]:
     """
-    Load the reranker; this can take a while when first initializing.
-    Think of this as an import statement.
+    Get all the ids from the collection.
     """
-    with console.status(
-        f"[green]Installing reranking model... This may take a while. [/green]",
-        spinner="dots",
-    ):
-        reranker = FlagReranker(
-            "BAAI/bge-reranker-large", use_fp16=True
-        )  # Setting use_fp16 to True speeds up computation with a slight performance degradation
 
 
 ## Our query functions
@@ -321,34 +435,15 @@ def load_reranker() -> None:
 
 def query_vector_db(
     collection: chromadb.Collection, query_string: str, n_results: int
-) -> list[str]:
+) -> list[tuple]:
     """
     Query the collection for a query string and return the top n results.
     """
     results = collection.query(query_texts=[query_string], n_results=n_results)
     ids = results["ids"][0]
     documents = results["documents"][0]
-    return list(zip(ids, documents))
-
-
-# def rerank_options(options: list[tuple], query: str, k: int = 5) -> list[tuple]:
-#     """
-#     Reranking magic.
-#     """
-#     reranker = FlagReranker(
-#         "BAAI/bge-reranker-large", use_fp16=True
-#     )  # Setting use_fp16 to True speeds up computation with a slight performance degradation
-#     ranked_results: list[tuple] = []
-#     for option in options:
-#         course = option[0]  # This is "id" from the Chroma output.
-#         TOC = option[1]  # This is "document" from the Chroma output.
-#         score = reranker.compute_score([query, TOC])
-#         ranked_results.append((course, score))
-#     # sort ranked_results by highest score
-#     ranked_results.sort(key=lambda x: x[1], reverse=True)
-#     # Return the five best.
-#     return ranked_results[:k]
-#
+    responses = list(zip(ids, documents))
+    return responses
 
 
 def query_courses(
@@ -361,16 +456,40 @@ def query_courses(
     """
     Query the collection for a query string and return the top n results.
     """
+    query_string = query_string.strip()
     console.print(
         "[yellow]------------------------------------------------------------------------[/yellow]"
     )
+    # Check if the query is in the cache
+    cache_hit = cache.cache_lookup(query_string.lower())
+    if cache_hit:
+        console.print(f"[green]Query found in cache: {query_string}[/green]")
+        cache_hit = [
+            (response.course_title, response.similarity) for response in cache_hit
+        ]
+        return cache_hit
+    # Otherwise, query the vector database
     with console.status(
         f'[green]Query: [/green][yellow]"{query_string}"[/yellow][green]...[/green]',
         spinner="dots",
     ):
         time.sleep(1)
+        # Get the results from the vector database
         results = query_vector_db(collection, query_string, n_results)
+        # Rerank the results
         reranked_results = rerank_options(results, query_string, k, model_name)
+    # Add to the cache
+    if cache:
+        cached_responses = [
+            CachedResponse(
+                course_title=reranked_result[0], similarity=reranked_result[1]
+            )
+            for reranked_result in reranked_results
+        ]
+        cached_query = CachedQuery(
+            query=query_string.lower(), responses=cached_responses
+        )
+        cache.insert_cached_query(cached_query)
     return reranked_results
 
 
@@ -379,6 +498,7 @@ def Curate(
 ) -> list[tuple]:
     """
     This is the importable version of the query_courses function.
+    Returns a list of tuples, where the first element is the course title and the second is the confidence.
     """
     if installed():
         if update_required():
@@ -400,7 +520,7 @@ def Curate(
 # -----------------------------------------------------------------
 
 
-def process_multiline_input(text: str) -> str:
+def process_multiline_input(text: str) -> list[str]:
     """
     Process a multiline text.
     """
@@ -572,13 +692,18 @@ if __name__ == "__main__":
             )
             console.print(welcome_card)
             console.print("[green]First time installation:[/green]")
+            console.print(f"[green]Device detected: {device}[/green]")
             console.print(f"[green]{checkbox} Cosmo export found: {cosmo_file}[/green]")
-            load_reranker()
-            console.print(f"[green]{checkbox} Reranker installed.[/green]")
             collection = create_vector_db()
             console.print(
                 f"[green]{checkbox} Vector database created: {vector_db}[/green]"
             )
+            # Delete the db file at cache_path
+            if os.path.exists(cache_path):
+                os.remove(cache_path)
+                console.print(
+                    f"[green]{checkbox} Cache file refreshed: {cache_path}[/green]"
+                )
             console.print(
                 "[italic yellow]First-time user? Run the script with `python Curate.py -r` to see the readme.[/italic yellow]"
             )
