@@ -1,24 +1,5 @@
-import subprocess
-import os, sys
-
-hostnames = {
-    "remote": ["Botvinnik", "bianders-mn7180.linkedin.biz"],
-    "local": ["Caruana"],
-}
-
-# Constants
-hostname = subprocess.check_output(["hostname"]).decode("utf-8").strip()
-password = os.getenv("POSTGRES_PASSWORD")
-if not password:
-    print("POSTGRES_PASSWORD not found in environment variables.")
-    sys.exit()
-
-
-# @contextmanager
-# def get_db_connection():
-
-
-# Imports can take a while, so we'll give the user a spinner.
+# Curate is now split into server and file mode. This is file mode.
+# This will be accessed by the main Curate script which is simplified.
 # -----------------------------------------------------------------
 from rich.console import Console
 from rich.panel import Panel
