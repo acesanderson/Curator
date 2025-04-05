@@ -10,11 +10,13 @@ This is a separate branch, so chop it into server mode first and then we can add
 # Roadmap
 ## Server Mode
 - [x] implement Chroma_curate script in Kramer
-- [ ] Make sure query function works there
-- [ ] rewrite Curate.py to use the CRUDdy functions from Chroma_curate
-## MCP Server
-- [ ] create an MCP server that accesses Chroma server
+- [x] Make sure query function works there
+- [x] rewrite Curate.py to use the CRUDdy functions from Chroma_curate
+- [ ] create an actual Curator server -- this access chroma server, yes, but also runs the reranking bits.
+ - [ ] FastAPI -- implement 1+ endpoints for the core Curator functionality
+- [ ] add MCP logic to the Curator server. This would still use FastAPI (not FastMCP)
 - [ ] connect to Claude desktop as POC
+- [ ] implement client logic within Chain/ReACT and Tool class
 - [ ] experiment with clients (in ask / twig scripts etc.)
 ## Evaluation
 - [ ] allow for swapping out embedding models as plugins
