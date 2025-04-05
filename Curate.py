@@ -23,6 +23,7 @@ def query_courses(
     query_string: str,
     k: int = 5,
     n_results: int = 30,
+    model_name: str = "bge",
 ) -> list[tuple]:
     """
     Query the collection for a query string and return the top n results.
@@ -49,7 +50,7 @@ def query_courses(
         # Get the results from the vector database
         results = query_course_descriptions_sync(query_string, n_results)
         # Rerank the results
-        reranked_results = rerank_options(results, query_string, k, "bge")
+        reranked_results = rerank_options(results, query_string, k, model_name)
     # Add to the cache
     if cache:
         cached_responses = [
@@ -65,7 +66,9 @@ def query_courses(
     return reranked_results
 
 
-def Curate(query_string: str, k: int = 5, n_results: int = 30) -> list[tuple]:
+def Curate(
+    query_string: str, k: int = 5, n_results: int = 30, model_name: str = "bge"
+) -> list[tuple]:
     """
     This is the importable version of the query_courses function.
     Returns a list of tuples, where the first element is the course title and the second is the confidence.
@@ -74,6 +77,7 @@ def Curate(query_string: str, k: int = 5, n_results: int = 30) -> list[tuple]:
         query_string=query_string,
         k=k,
         n_results=n_results,
+        model_name=model_name,
     )
     return results
 
