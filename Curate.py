@@ -1,8 +1,7 @@
+from Kramer import query_course_descriptions_sync
 from Curator.rerank import rerank_options
 from Curator.cache.cache import CuratorCache, CachedQuery, CachedResponse
 import argparse  # for parsing command line arguments
-import pandas as pd  # for reading cosmo export + preparing data for vector database
-from Kramer import query_course_descriptions_sync
 import time
 from pathlib import Path
 from rich.console import Console
