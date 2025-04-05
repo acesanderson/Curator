@@ -1,3 +1,3 @@
-from .Curate import Curate, load_cosmo_export
+from .Curate import Curate
 
-__all__ = ["Curate", "load_cosmo_export"]
+__all__ = ["Curate"]

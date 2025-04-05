@@ -3,6 +3,10 @@
 Allow for a server mode. Currently it is "file" mode, i.e. needs an excel file and generates a persistent chroma database.
 This is a separate branch, so chop it into server mode first and then we can add routing for file / vs. server mode based on user.
 
+# Considerations
+- Chroma no longer needs logic in the Curator project at all (for server mode), since Kramer handles instantiation and querying of the database.
+- reranking needs a rethink, especially since I want it to be modular
+
 # Roadmap
 ## Server Mode
 - [x] implement Chroma_curate script in Kramer

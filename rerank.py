@@ -29,16 +29,20 @@ rankers = {
 
 
 def rerank_options(
-    options: list[tuple], query: str, k: int = 5, model_name: str = "bge"
+    options: list[dict], query: str, k: int = 5, model_name: str = "bge"
 ) -> list[tuple]:
     """
     Reranking magic.
     """
     ranker = Reranker(**rankers[model_name], verbose=False)
+    if ranker is None:
+        raise ValueError(
+            f"Ranker {model_name} not found. Please check the model name and try again."
+        )
     ranked_results: list[tuple] = []
     for option in options:
-        course = option[0]  # This is "id" from the Chroma output.
-        TOC = option[1]  # This is "document" from the Chroma output.
+        course = option["course_title"]
+        TOC = option["course_description"]
         ranked = ranker.rank(query=query, docs=[TOC])
         # Different models return different objects (RankedResults or Result)
         try:  # See if it's a RankedResults object
