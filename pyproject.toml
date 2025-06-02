@@ -1,0 +1,16 @@
+[project]
+name = "curator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "argparse>=1.4.0",
+    "asyncio>=3.4.3",
+    "chromadb>=1.0.0",
+    "mcp[cli]>=1.6.0",
+    "pandas>=2.2.3",
+    "pydantic>=2.11.2",
+    "rerankers>=0.9.1.post1",
+    "rich>=14.0.0",
+]

@@ -1,5 +1,8 @@
-from Kramer import query_course_descriptions_sync
-from Curator.rerank import rerank_options
+from Kramer import (
+    query_course_descriptions_sync,
+    query_course_descriptions,
+)  # The latter is async
+from Curator.rerank import rerank_options, rerank_options_async
 from Curator.cache.cache import CuratorCache, CachedQuery, CachedResponse
 import argparse  # for parsing command line arguments
 import time
@@ -24,6 +27,7 @@ def query_courses(
     k: int = 5,
     n_results: int = 30,
     model_name: str = "bge",
+    cached=True,
 ) -> list[tuple]:
     """
     Query the collection for a query string and return the top n results.
@@ -34,13 +38,14 @@ def query_courses(
         "[yellow]------------------------------------------------------------------------[/yellow]"
     )
     # Check if the query is in the cache
-    cache_hit = cache.cache_lookup(query_string.lower())
-    if cache_hit:
-        console.print(f"[green]Query found in cache: {query_string}[/green]")
-        cache_hit = [
-            (response.course_title, response.similarity) for response in cache_hit
-        ]
-        return cache_hit
+    if cached:
+        cache_hit = cache.cache_lookup(query_string.lower())
+        if cache_hit:
+            console.print(f"[green]Query found in cache: {query_string}[/green]")
+            cache_hit = [
+                (response.course_title, response.similarity) for response in cache_hit
+            ]
+            return cache_hit
     # Otherwise, query the vector database
     with console.status(
         f'[green]Query: [/green][yellow]"{query_string}"[/yellow][green]...[/green]',
@@ -52,7 +57,57 @@ def query_courses(
         # Rerank the results
         reranked_results = rerank_options(results, query_string, k, model_name)
     # Add to the cache
-    if cache:
+    if cache and cached:
+        cached_responses = [
+            CachedResponse(
+                course_title=reranked_result[0], similarity=reranked_result[1]
+            )
+            for reranked_result in reranked_results
+        ]
+        cached_query = CachedQuery(
+            query=query_string.lower(), responses=cached_responses
+        )
+        cache.insert_cached_query(cached_query)
+    return reranked_results
+
+
+async def query_courses_async(
+    query_string: str,
+    k: int = 5,
+    n_results: int = 30,
+    model_name: str = "bge",
+    cached=True,
+) -> list[tuple]:
+    """
+    Query the collection for a query string and return the top n results.
+    """
+    query_string = query_string.strip()
+    console.print(
+        "[yellow]------------------------------------------------------------------------[/yellow]"
+    )
+    # Check if the query is in the cache
+    if cached:
+        cache_hit = cache.cache_lookup(query_string.lower())
+        if cache_hit:
+            console.print(f"[green]Query found in cache: {query_string}[/green]")
+            cache_hit = [
+                (response.course_title, response.similarity) for response in cache_hit
+            ]
+            return cache_hit
+        # Otherwise, query the vector database
+    with console.status(
+        f'[green]Query: [/green][yellow]"{query_string}"[/yellow][green]...[/green]',
+        spinner="dots",
+    ):
+        time.sleep(1)
+        # Get the results from the vector database
+        results = await query_course_descriptions(query_string, n_results)
+        # Rerank the results
+        reranked_results = await rerank_options_async(
+            results, query_string, k, model_name
+        )
+    # Add to the cache
+    if cache and cached:  # If cache exists and cached is chosed
         cached_responses = [
             CachedResponse(
                 course_title=reranked_result[0], similarity=reranked_result[1]
@@ -67,7 +122,11 @@ def query_courses(
 
 
 def Curate(
-    query_string: str, k: int = 5, n_results: int = 30, model_name: str = "bge"
+    query_string: str,
+    k: int = 5,
+    n_results: int = 30,
+    model_name: str = "bge",
+    cached=True,
 ) -> list[tuple]:
     """
     This is the importable version of the query_courses function.
@@ -78,6 +137,27 @@ def Curate(
         k=k,
         n_results=n_results,
         model_name=model_name,
+        cached=cached,
+    )
+    return results
+
+
+async def CurateAsync(
+    query_string: str,
+    k: int = 5,
+    n_results: int = 30,
+    model_name: str = "bge",
+    cached=True,
+) -> list[tuple]:
+    """
+    This is the async version of the Curate function.
+    """
+    results = await query_courses_async(
+        query_string=query_string,
+        k=k,
+        n_results=n_results,
+        model_name=model_name,
+        cached=cached,
     )
     return results
 
