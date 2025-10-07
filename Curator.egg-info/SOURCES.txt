@@ -1,7 +1,0 @@
-setup.py
-Curator.egg-info/PKG-INFO
-Curator.egg-info/SOURCES.txt
-Curator.egg-info/dependency_links.txt
-Curator.egg-info/top_level.txt
-tests/__init__.py
-tests/test_Curate.py

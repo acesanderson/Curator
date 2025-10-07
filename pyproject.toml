@@ -1,16 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "curator"
-version = "0.1.0"
+version = "1.0.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "argparse>=1.4.0",
     "asyncio>=3.4.3",
-    "chromadb>=1.0.0",
+    "chromadb>=0.5.11",
+    "kramer",
     "mcp[cli]>=1.6.0",
     "pandas>=2.2.3",
     "pydantic>=2.11.2",
     "rerankers>=0.9.1.post1",
     "rich>=14.0.0",
 ]
+
+# ── Hatchling (build) ──────────────────────────────────────────────────────────
+# Point Hatchling at the src/ package; this is the critical bit for src-layout.
+[tool.hatch.build.targets.wheel]
+packages = ["src/curator"]
+sources = ["curator"]
+include = ["src/curator/py.typed"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/**", "README.*", "LICENSE*"]
+
+# ── Pytest ─────────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+addopts = "-v -s --tb=short --no-header --showlocals --pdb -x"
+log_cli = true
+log_cli_level = "INFO"
+
+# ── uv sources (local/editable deps) ───────────────────────────────────────────
+[tool.uv.sources]
+kramer = { path = "../kramer-project", editable = true }
+
+# ── entry points ───────────────────────────────────────────────────────────────
+[project.scripts]
+curate = "curator.curate:main"

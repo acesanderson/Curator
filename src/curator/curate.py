@@ -1,9 +1,9 @@
-from Kramer import (
+from kramer.database.Chroma_curate import (
     query_course_descriptions_sync,
     query_course_descriptions,
 )  # The latter is async
-from Curator.rerank import rerank_options, rerank_options_async
-from Curator.cache.cache import CuratorCache, CachedQuery, CachedResponse
+from curator.rerank import rerank_options, rerank_options_async
+from curator.cache.cache import CuratorCache, CachedQuery, CachedResponse
 import argparse  # for parsing command line arguments
 import time
 from pathlib import Path
@@ -162,7 +162,7 @@ async def CurateAsync(
     return results
 
 
-if __name__ == "__main__":
+def main():
     # Our arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("query", nargs="?", help="A query for the text.")
@@ -202,3 +202,7 @@ if __name__ == "__main__":
     )
     for result in results:
         print(result)
+
+
+if __name__ == "__main__":
+    main()
