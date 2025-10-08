@@ -559,7 +559,7 @@ dependencies = [
 requires-dist = [
     { name = "argparse", specifier = ">=1.4.0" },
     { name = "asyncio", specifier = ">=3.4.3" },
-    { name = "chromadb", specifier = ">=0.5.11" },
+    { name = "chromadb" },
     { name = "kramer", editable = "../kramer-project" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.6.0" },
     { name = "pandas", specifier = ">=2.2.3" },
