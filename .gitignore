@@ -11,3 +11,4 @@ model_testing/
 *.log
 *.pyc
 *.db
+uv.lock
