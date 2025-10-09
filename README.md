@@ -1,169 +1,125 @@
-# Curator
+# curator-project
 
-![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+## Project Purpose
 
-**AI-powered course recommendation engine that finds relevant courses using semantic search and advanced reranking.**
+curator-project is a semantic search and reranking system for course content. It queries a vector database to retrieve course descriptions matching a user query, then applies configurable reranking models to improve result relevance. The system includes caching functionality to optimize repeated queries and supports both synchronous and asynchronous operation modes.
 
-Curator transforms natural language queries into precise course recommendations by combining vector similarity search with state-of-the-art reranking models - all running locally for complete data privacy.
+## Architecture Overview
 
-## Quick Start
+- **curate.py**: Main entry point providing query orchestration. Handles vector database retrieval, reranking pipeline coordination, cache management, and CLI interface.
+- **rerank.py**: Reranking layer supporting multiple model backends (BGE, MixedBread, Cohere, Jina, FlashRank, ColBERT, T5, RankLLM). Wraps the `rerankers` library and normalizes output across different model types.
+- **cache module**: SQLite-based query cache (referenced but not provided in codebase). Stores query-response pairs to reduce redundant computation.
 
-```bash
-# Install
-pip install -r requirements.txt
+## Dependencies
 
-# Find courses with a simple query
-python Curate.py "machine learning for beginners"
+Major dependencies inferred from imports:
 
-# Get more results
-python Curate.py "data visualization" -k 10
+- **rerankers**: Core reranking functionality
+- **rich**: Console output formatting and status indicators
+- **kramer**: Local/internal dependency providing vector database access via `Chroma_curate` module
 
-# Process multiple queries from file
-python Curate.py -i queries.txt -o recommendations.csv
-```
+External API requirements (via environment variables):
+- Cohere API (COHERE_API_KEY)
+- Jina API (JINA_API_KEY)
+- OpenAI API (OPENAI_API_KEY)
 
-**First run?** Curator automatically builds its vector database - grab a coffee while it processes your course catalog (5-10 minutes).
+## API Documentation
 
-## Installation
+### `Curate(query_string, k=5, n_results=30, model_name="bge", cached=True)`
 
-**Prerequisites:**
-- Python 3.7+
-- Course catalog file (Excel/CSV format)
+Synchronous query interface for course recommendations.
 
-**Setup:**
-```bash
-git clone https://github.com/acesanderson/Curator
-cd Curator
-pip install -r requirements.txt
+**Parameters:**
+- `query_string` (str): Search query
+- `k` (int): Number of final results to return
+- `n_results` (int): Size of initial retrieval pool before reranking
+- `model_name` (str): Reranking model identifier (see `rankers` dict for options)
+- `cached` (bool): Enable cache lookup and storage
 
-# Place your course catalog file in the project directory
-# Run your first query to initialize the database
-python Curate.py "your first query"
-```
+**Returns:** List of tuples `[(course_title: str, confidence_score: float), ...]`
 
-## How It Works
+### `CurateAsync(query_string, k=5, n_results=30, model_name="bge", cached=True)`
 
-Curator uses a sophisticated two-stage pipeline:
+Asynchronous version of `Curate`.
 
-1. **Vector Search**: Converts your query and course descriptions into semantic embeddings using ChromaDB
-2. **AI Reranking**: Applies advanced reranking models (BGE, MixedBread, Cohere, etc.) to refine results based on true relevance
+**Parameters:** Identical to `Curate`
+
+**Returns:** List of tuples `[(course_title: str, confidence_score: float), ...]`
+
+### `rerank_options(options, query, k=5, model_name="bge")`
+
+Reranks a list of course options against a query.
+
+**Parameters:**
+- `options` (list[dict]): Course objects containing `course_title` and `course_description` keys
+- `query` (str): Query string for relevance scoring
+- `k` (int): Number of top results to return
+- `model_name` (str): Reranking model key from `rankers` dict
+
+**Returns:** List of tuples `[(course_title: str, score: float), ...]` sorted by descending score
+
+### `rerank_options_async(options, query, k=5, model_name="bge")`
+
+Asynchronous version of `rerank_options`.
+
+**Parameters:** Identical to `rerank_options`
+
+**Returns:** List of tuples `[(course_title: str, score: float), ...]`
+
+### Available Reranking Models
+
+Model names for `model_name` parameter:
+- `bge`: BAAI/bge-reranker-large
+- `mxbai`: MixedBread mxbai-rerank-large-v1
+- `cohere`: Cohere API reranker
+- `jina`: Jina reranker v2 (multilingual)
+- `flash`, `mini`, `colbert`, `t5`, `rankllm`, `ce`, `llm`: Additional model variants
+
+## Usage Examples
+
+### Basic synchronous query
 
 ```python
-# Use as a Python module
-from Curator import Curate
+from curator.curate import Curate
 
-results = Curate("javascript machine learning", k=5)
-# Returns: [('Learning TensorFlow with JavaScript', 3.31), ...]
+results = Curate(
+    query_string="machine learning fundamentals",
+    k=5,
+    model_name="bge"
+)
+
+for course_title, confidence in results:
+    print(f"{course_title}: {confidence:.3f}")
 ```
 
-## Core Features
+### Asynchronous query with custom parameters
 
-- **Semantic Understanding**: Matches intent, not just keywords
-- **Multiple Reranking Models**: BGE, MixedBread, Cohere, FlashRank, and more
-- **Smart Caching**: Instant results for repeated queries
-- **Batch Processing**: Handle multiple queries efficiently
-- **Privacy-First**: Runs entirely locally (except for optional API-based rankers)
+```python
+import asyncio
+from curator.curate import CurateAsync
 
-## Command Line Options
+async def search_courses():
+    results = await CurateAsync(
+        query_string="advanced neural networks",
+        k=10,
+        n_results=50,
+        model_name="cohere",
+        cached=False
+    )
+    return results
+
+results = asyncio.run(search_courses())
+```
+
+### CLI usage
 
 ```bash
-python Curate.py "query" [options]
+# Basic query
+python -m curator.curate "introduction to python"
 
-# Key parameters
--k 10              # Number of final recommendations (default: 5)
--n 50              # Initial search pool size (default: 30)
--i input.csv       # Batch process from file
--o results.txt     # Save results to file
--s                 # Check system status
+# Customized retrieval parameters
+python -m curator.curate "data science" -k 10 -n 100
+
+# Display application status
+python -m curator.curate --status
 ```
-
-## Architecture
-
-```
-Query → Vector Search → Reranking → Top Results
-        (ChromaDB)     (AI Models)   (Ranked List)
-```
-
-**Data Flow:**
-- Course catalog → Embeddings → Vector database
-- User query → Semantic search → AI reranking → Recommendations
-
-## Server Mode (Beta)
-
-Run Curator as a web service with MCP (Model Context Protocol) support:
-
-```bash
-python CurateServer.py
-```
-
-Provides both REST API and MCP endpoints for integration with AI assistants and other tools.
-
-## Configuration
-
-**Reranking Models:**
-- `bge` (default): BAAI/bge-reranker-large
-- `mxbai`: MixedBread AI reranker
-- `cohere`: Cohere Rerank API
-- `flash`: FlashRank (lightweight)
-
-**Environment Variables:**
-```bash
-export COHERE_API_KEY="your-key"
-export JINA_API_KEY="your-key"
-export OPENAI_API_KEY="your-key"
-```
-
-## Examples
-
-```bash
-# Specific technical topics
-python Curate.py "kubernetes microservices architecture"
-
-# Skill level targeting
-python Curate.py "python for data science beginners"
-
-# Business domains
-python Curate.py "agile project management certification"
-
-# Programming languages
-python Curate.py "advanced javascript frameworks"
-```
-
-## Performance
-
-- **Cold start**: 5-10 minutes (database initialization)
-- **Warm queries**: 1-3 seconds
-- **Cached queries**: <100ms
-- **Batch processing**: ~2 seconds per query
-
-## Requirements
-
-See `requirements.txt` for full dependencies. Key packages:
-- `chromadb` - Vector database
-- `rerankers` - AI reranking models
-- `rich` - CLI interface
-- `fastapi` - Server mode (optional)
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Run tests: `python -m pytest tests/`
-4. Commit changes (`git commit -m 'Add amazing feature'`)
-5. Push to branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
-
-## License
-
-MIT License - see LICENSE file for details.
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/acesanderson/Curator/issues)
-- **Email**: bianderson@linkedin.com
-- **Status Check**: `python Curate.py -s`
-
----
-
-*Built with ❤️ for better course discovery*
